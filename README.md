@@ -134,8 +134,8 @@ A Databricks dashboard visualizes:
   - [dashboard_screenshot.png](dashboard/dashboard_screenshot.png)
 
 - **slides/**
-  - [ELT Databricks Project_Cohort Analysis.pptx](slides/ELT Databricks Project_Cohort Analysis.pptx)
-  - [ELT Databricks Project_Cohort Analysis.pdf](slides/ELT Databricks Project_Cohort Analysis.pdf)
+  - [elt_databricks_project_cohort_analysis.pptx](slides/elt_databricks_project_cohort_analysis.pptx)
+  - [elt_databricks_project_cohort_analysis.pdf](slides/elt_databricks_project_cohort_analysis.pdf)
 
 
 ## **7. Data Context & Limitations**
