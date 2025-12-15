@@ -1,0 +1,1657 @@
+{
+  "datasets": [
+    {
+      "name": "97d3a95f",
+      "displayName": "gold_cohort_size_by_month",
+      "queryLines": [
+        "SELECT * FROM workspace.bigquery_db_cohort_db.gold_cohort_size_by_month"
+      ]
+    },
+    {
+      "name": "ca74844f",
+      "displayName": "gold_repeat_purchase_rate_by_cohort",
+      "queryLines": [
+        "SELECT * FROM workspace.bigquery_db_cohort_db.gold_repeat_purchase_rate_by_cohort"
+      ]
+    },
+    {
+      "name": "2e907158",
+      "displayName": "gold_retention_rate_by_cohort",
+      "queryLines": [
+        "SELECT * FROM workspace.bigquery_db_cohort_db.gold_retention_rate_by_cohort"
+      ]
+    },
+    {
+      "name": "5f65f36e",
+      "displayName": "Average 1-Month Retention",
+      "queryLines": [
+        "SELECT ROUND(AVG(retention_rate_1m)) AS avg_1m_retention\n",
+        "FROM gold_retention_rate_by_cohort;\n"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "c0b192c7",
+      "displayName": "Total Customers",
+      "queryLines": [
+        "SELECT SUM(num_customers) AS total_new_customers\n",
+        "FROM gold_cohort_size_by_month;"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "f18f50c4",
+      "displayName": "Acquisition Drop (%)",
+      "queryLines": [
+        "SELECT \n",
+        "  ROUND((1 - \n",
+        "    ( (SELECT num_customers FROM gold_cohort_size_by_month ORDER BY cohort_month DESC LIMIT 1)\n",
+        "      /\n",
+        "      (SELECT num_customers FROM gold_cohort_size_by_month ORDER BY cohort_month ASC LIMIT 1)\n",
+        "    )\n",
+        "  ) * 100) AS acquisition_drop_pct;\n"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "e48cc0c3",
+      "displayName": "Avg Repeat Rate (2+ Orders)",
+      "queryLines": [
+        "SELECT ROUND(AVG(pct_2plus_orders)) AS avg_repeat_rate\n",
+        "FROM gold_repeat_purchase_rate_by_cohort;"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "cc7d773f",
+      "displayName": "Heatmap-Query",
+      "queryLines": [
+        "SELECT\n",
+        "  cohort_month,\n",
+        "  'month0' AS period,\n",
+        "  100 AS retention\n",
+        "FROM gold_retention_rate_by_cohort\n",
+        "\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  cohort_month,\n",
+        "  'month1' AS period,\n",
+        "  retention_rate_1m AS retention\n",
+        "FROM gold_retention_rate_by_cohort\n",
+        "\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  cohort_month,\n",
+        "  'month2' AS period,\n",
+        "  retention_rate_2m AS retention\n",
+        "FROM gold_retention_rate_by_cohort\n",
+        "\n",
+        "UNION ALL\n",
+        "SELECT\n",
+        "  cohort_month,\n",
+        "  'month3' AS period,\n",
+        "  retention_rate_3m AS retention\n",
+        "FROM gold_retention_rate_by_cohort\n",
+        "ORDER BY cohort_month, period;\n"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "02b1323a",
+      "displayName": "Time to 2nd Purchase",
+      "queryLines": [
+        "SELECT \n",
+        "  DATE_FORMAT(DATE_TRUNC('month', first_purchase_date), 'yyyy-MM') AS cohort_month,\n",
+        "  ROUND(AVG(days_between_first_and_second)) AS avg_days_to_repurchase,\n",
+        "  ROUND(PERCENTILE(days_between_first_and_second, 0.5)) AS median_days_to_repurchase\n",
+        "FROM workspace.bigquery_db_cohort_db.silver_cohort_analysis\n",
+        "WHERE second_purchase_date IS NOT NULL\n",
+        "GROUP BY cohort_month\n",
+        "ORDER BY cohort_month"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    },
+    {
+      "name": "e26ffa0c",
+      "displayName": "AVG days to second purchase",
+      "queryLines": [
+        "SELECT \n",
+        "  ROUND(AVG(days_between_first_and_second)) AS avg_days_to_repurchase\n",
+        "FROM workspace.bigquery_db_cohort_db.silver_cohort_analysis\n",
+        "WHERE second_purchase_date IS NOT NULL"
+      ],
+      "catalog": "workspace",
+      "schema": "bigquery_db_cohort_db"
+    }
+  ],
+  "pages": [
+    {
+      "name": "f02957f5",
+      "displayName": "Cohort Analysis",
+      "layout": [
+        {
+          "widget": {
+            "name": "7d9a74fb",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2e907158",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "retention_rate_1m",
+                      "expression": "`retention_rate_1m`"
+                    },
+                    {
+                      "name": "retention_rate_2m",
+                      "expression": "`retention_rate_2m`"
+                    },
+                    {
+                      "name": "retention_rate_3m",
+                      "expression": "`retention_rate_3m`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true,
+                    "labelAngle": 0,
+                    "hideLabels": false
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "retention_rate_1m",
+                      "displayName": "within 1 month"
+                    },
+                    {
+                      "fieldName": "retention_rate_2m",
+                      "displayName": "within 2 months"
+                    },
+                    {
+                      "fieldName": "retention_rate_3m",
+                      "displayName": "within 3 months"
+                    }
+                  ],
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "title": "%"
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "top"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Retention Remains Strong Across Cohorts, Improving In Recent Months",
+                "description": "Newer cohorts exhibit consistently stronger early-stage retention\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  "#66A3FF",
+                  "#1EC6D7",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "180e2450",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ca74844f",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "pct_2plus_orders",
+                      "expression": "`pct_2plus_orders`"
+                    },
+                    {
+                      "name": "pct_3plus_orders",
+                      "expression": "`pct_3plus_orders`"
+                    },
+                    {
+                      "name": "pct_4plus_orders",
+                      "expression": "`pct_4plus_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "pct_2plus_orders",
+                      "displayName": "2+ orders"
+                    },
+                    {
+                      "fieldName": "pct_3plus_orders",
+                      "displayName": "3+ orders"
+                    },
+                    {
+                      "fieldName": "pct_4plus_orders",
+                      "displayName": "4+ orders"
+                    }
+                  ],
+                  "axis": {
+                    "hideLabels": true,
+                    "hideGrid": true,
+                    "title": "%"
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "top"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Nearly All Customers Become Repeat Buyers",
+                "description": "Repeat purchase rates demonstrates strong customer loyalty\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  "#66A3FF",
+                  "#1EC6D7",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 4,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "2fecf587",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "97d3a95f",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "num_customers",
+                      "expression": "`num_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "num_customers",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "hideTitle": true
+                  },
+                  "displayName": "Customers",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "New Customer Acquisition Fell Steadily Over The Period",
+                "description": "Cohort sizes declined by 85% from Jan. to Jun.\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "fbbf43d2",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 22px;\">Customer Cohort Performance — Strong Retention Trend Amid Declining Acquisition</span><br><span style=\"font-size: 18px;\">Cohort behavior across first-time buyers from Jan–Jun 2024</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "5a720d32",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "02b1323a",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "avg_days_to_repurchase",
+                      "expression": "`avg_days_to_repurchase`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg_days_to_repurchase",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "hideTitle": true
+                  },
+                  "displayName": "AVG days to repurchase",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Repurchase Cycle Is Shortening Across Cohorts",
+                "description": "Average days to second purchase declined from ~58 to ~38 days"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "b795baf4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "total_new_customers",
+                      "expression": "`total_new_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_new_customers"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "9c17ed91",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5f65f36e",
+                  "fields": [
+                    {
+                      "name": "avg_1m_retention",
+                      "expression": "`avg_1m_retention`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_1m_retention"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AVG 1-Month \nRetention Rate %",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "132c66ce",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e48cc0c3",
+                  "fields": [
+                    {
+                      "name": "avg_repeat_rate",
+                      "expression": "`avg_repeat_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_repeat_rate"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AVG Repeat Rate %\n2+ Orders",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "63d1fc78",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f18f50c4",
+                  "fields": [
+                    {
+                      "name": "acquisition_drop_pct",
+                      "expression": "`acquisition_drop_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "acquisition_drop_pct"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Acquisition \nDrop %",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "5f2582aa",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)",
+                  "style": {
+                    "color": {
+                      "themeColorType": "widgetBorderColor"
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": false,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "97d7bbab",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)",
+                  "style": {
+                    "color": {
+                      "themeColorType": "widgetBorderColor"
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": false,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "ebbf9b24",
+      "displayName": "Cohort Analysis 1",
+      "layout": [
+        {
+          "widget": {
+            "name": "7a21d05c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2e907158",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "retention_rate_1m",
+                      "expression": "`retention_rate_1m`"
+                    },
+                    {
+                      "name": "retention_rate_2m",
+                      "expression": "`retention_rate_2m`"
+                    },
+                    {
+                      "name": "retention_rate_3m",
+                      "expression": "`retention_rate_3m`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "labelAngle": 0,
+                    "hideLabels": false,
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "retention_rate_1m",
+                      "displayName": "within 1 month"
+                    },
+                    {
+                      "fieldName": "retention_rate_2m",
+                      "displayName": "within 2 months"
+                    },
+                    {
+                      "fieldName": "retention_rate_3m",
+                      "displayName": "within 3 months"
+                    }
+                  ],
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "title": "%"
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "top"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Retention Remains Strong Across Cohorts, Improving In Recent Months",
+                "description": "Newer cohorts exhibit consistently stronger early-stage retention\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  "#66A3FF",
+                  "#1EC6D7",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c5df3596",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ca74844f",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "pct_2plus_orders",
+                      "expression": "`pct_2plus_orders`"
+                    },
+                    {
+                      "name": "pct_3plus_orders",
+                      "expression": "`pct_3plus_orders`"
+                    },
+                    {
+                      "name": "pct_4plus_orders",
+                      "expression": "`pct_4plus_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true,
+                    "hideLabels": false,
+                    "labelAngle": 0
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "min": 0,
+                      "max": 100
+                    }
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "pct_2plus_orders",
+                      "displayName": "2+ orders"
+                    },
+                    {
+                      "fieldName": "pct_3plus_orders",
+                      "displayName": "3+ orders"
+                    },
+                    {
+                      "fieldName": "pct_4plus_orders",
+                      "displayName": "4+ orders"
+                    }
+                  ],
+                  "axis": {
+                    "hideLabels": false,
+                    "hideGrid": true,
+                    "title": "%"
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                },
+                "color": {
+                  "legend": {
+                    "position": "top"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Nearly All Customers Become Repeat Buyers",
+                "description": "Repeat purchase rates demonstrates strong customer loyalty\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  "#66A3FF",
+                  "#1EC6D7",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ],
+                "size": 0
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 4,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "be8e9b2c",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "97d3a95f",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "num_customers",
+                      "expression": "`num_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "num_customers",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "hideTitle": true
+                  },
+                  "displayName": "Customers",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "New Customer Acquisition Fell Steadily Over The Period",
+                "description": "Cohort sizes declined by 85% from Jan. to Jun.\n"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "c254be70",
+            "multilineTextboxSpec": {
+              "lines": [
+                "<span style=\"font-size: 22px;\">Customer Cohort Performance — Strong Retention Trend Amid Declining Acquisition</span><br><span style=\"font-size: 18px;\">Cohort behavior across first-time buyers from Jan–Jun 2024</span>"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "5ec6ae2b",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "02b1323a",
+                  "fields": [
+                    {
+                      "name": "cohort_month",
+                      "expression": "`cohort_month`"
+                    },
+                    {
+                      "name": "avg_days_to_repurchase",
+                      "expression": "`avg_days_to_repurchase`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "cohort_month",
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg_days_to_repurchase",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true,
+                    "hideTitle": true
+                  },
+                  "displayName": "AVG days to repurchase",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "showDescription": true,
+                "title": "Repurchase Cycle Is Shortening Across Cohorts",
+                "description": "Average days to second purchase declined from ~58 to ~38 days"
+              },
+              "mark": {
+                "colors": [
+                  "#0050B3",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 10,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "7323edbe",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "total_new_customers",
+                      "expression": "`total_new_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_new_customers"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "68bc511e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "5f65f36e",
+                  "fields": [
+                    {
+                      "name": "avg_1m_retention",
+                      "expression": "`avg_1m_retention`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_1m_retention"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AVG 1-Month \nRetention Rate %",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "693d77e7",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "e48cc0c3",
+                  "fields": [
+                    {
+                      "name": "avg_repeat_rate",
+                      "expression": "`avg_repeat_rate`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_repeat_rate"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "AVG Repeat Rate %\n2+ Orders",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "a5f4a3e5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f18f50c4",
+                  "fields": [
+                    {
+                      "name": "acquisition_drop_pct",
+                      "expression": "`acquisition_drop_pct`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "acquisition_drop_pct"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Acquisition \nDrop %",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "669abb7e",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)",
+                  "style": {
+                    "color": {
+                      "themeColorType": "widgetBorderColor"
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": false,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "58315cf0",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "c0b192c7",
+                  "fields": [
+                    {
+                      "name": "count(*)",
+                      "expression": "COUNT(`*`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(*)",
+                  "style": {
+                    "color": {
+                      "themeColorType": "widgetBorderColor"
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": false,
+                "title": "Total \nCustomers",
+                "headerAlignment": "center"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FAFAFB",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "applyModeEnabled": false
+  }
+}
