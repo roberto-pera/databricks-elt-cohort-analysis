@@ -124,8 +124,7 @@ This simulates a production-style batch pipeline and ensures deterministic execu
 
 **Databricks Job DAG (screenshot):**
 
-> 📌 *Insert screenshot here*  
-> `dashboard/databricks_job_dag.png`
+![Databricks DAF Screenshot](databricks_job_dag.png)
 
 ---
 
@@ -225,6 +224,35 @@ All insights should therefore be interpreted as **exploratory and directional**.
 
 ## **10. Repository Structure**
 
+- **bronze/**
+  - [bronze_ecom_orders.csv](bronze/bronze_ecom_orders.csv)
+  - [bronze_ecom_orders.py](bronze/bronze_ecom_orders.py)
+
+- **silver/**
+  - [silver_cohort_analysis.py](silver/silver_cohort_analysis.py)
+
+- **gold/**
+  - [gold_retention_rate_by_cohort.py](gold/gold_retention_rate_by_cohort.py)
+  - [gold_repeat_purchase_rate_by_cohort.py](gold/gold_repeat_purchase_rate_by_cohort.py)
+  - [gold_cohort_size_by_month.py](gold/gold_cohort_size_by_month.py)
+  - [gold_repurchase_cycle.py](gold/gold_repurchase_cycle.py)
+
+- **sql/**
+  - [silver_cohort_analysis.sql](silver/silver_cohort_analysis.sql)
+  - [gold_retention_rate_by_cohort.sql](gold/gold_retention_rate_by_cohort.sql)
+  - [gold_repeat_purchase_rate_by_cohort.sql](gold/gold_repeat_purchase_rate_by_cohort.sql)
+  - [gold_cohort_size_by_month.sql](gold/gold_cohort_size_by_month.sql)
+  - [gold_repurchase_cycle.sql](gold/gold_repurchase_cycle.sql)
+
+- **dashboard/**
+  - [dashboard_screenshot.png](dashboard/dashboard_screenshot.png)
+  - [dashboard_cohort_analysis.lvdash.json](dashboard/dashboard_cohort_analysis.lvdash.json)
+  - [dashboard_cohort_analysis_update.lvdash.json](dashboard/dashboard_cohort_analysis_update.lvdash.json)
+
+- **slides/**
+  - [elt_databricks_project_cohort_analysis.pptx](slides/elt_databricks_project_cohort_analysis.pptx)
+  - [elt_databricks_project_cohort_analysis.pdf](slides/elt_databricks_project_cohort_analysis.pdf)
+
 ---
 
 ## **11. How to Run the Pipeline**
@@ -243,41 +271,3 @@ All insights should therefore be interpreted as **exploratory and directional**.
 - Parameterize jobs for multiple environments
 - Extend Gold layer with LTV or churn metrics
 - Integrate acquisition metadata for deeper analysis
-
----
-
-## **6. Repository Structure**
-
-- **bronze/**
-  - [bronze_ecom_orders.csv](bronze/bronze_ecom_orders.csv)
-
-- **silver/**
-  - [silver_cohort_analysis.sql](silver/silver_cohort_analysis.sql)
-
-- **gold/**
-  - [gold_retention_rate_by_cohort.sql](gold/gold_retention_rate_by_cohort.sql)
-  - [gold_repeat_purchase_rate_by_cohort.sql](gold/gold_repeat_purchase_rate_by_cohort.sql)
-  - [gold_cohort_size_by_month.sql](gold/gold_cohort_size_by_month.sql)
-  - [gold_repurchase_cycle.sql](gold/gold_repurchase_cycle.sql)
-
-- **dashboard/**
-  - [dashboard_screenshot.png](dashboard/dashboard_screenshot.png)
-
-- **slides/**
-  - [elt_databricks_project_cohort_analysis.pptx](slides/elt_databricks_project_cohort_analysis.pptx)
-  - [elt_databricks_project_cohort_analysis.pdf](slides/elt_databricks_project_cohort_analysis.pdf)
-
-
-## **7. Data Context & Limitations**
-
-- Data covers the full year (Jan–Dec 2024)
-- First purchases cluster exclusively in **Jan–Jun**, forming six cohorts
-- Cohort sizes vary widely (10–66 customers)
-- Unknown factors:
-    - Marketing strategy
-    - Industry or seasonality
-    - Product and pricing context
-    - Customer segments
-- -> Insights should be viewed as **exploratory**, not conclusive.
-
----
